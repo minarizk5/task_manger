@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1><i class="fas fa-tasks"></i> Task Manager</h1>
+                <button class="logout-btn" onclick="window.location.href='{{ url_for('logout') }}'">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+
+            <!-- Category and Task Management -->
+            <div class="management-section">
+                <form class="category-form" method="POST" action="{{ url_for('add_category') }}">
+                    <input type="text" name="name" placeholder="New Category Name" required>
+                    <button type="submit"><i class="fas fa-plus"></i> Add Category</button>
+                </form>
+                <button class="add-task-btn" onclick="showAddTaskModal()">
+                    <i class="fas fa-plus"></i> Add New Task
+                </button>
+            </div>
+
+            <!-- Task Filters -->
+            <div class="filters">
+                <select onchange="window.location.href='/?sort=' + this.value">
+                    <option value="created_at">Sort by Date Created</option>
+                    <option value="due_date">Sort by Due Date</option>
+                    <option value="title">Sort by Title</option>
+                </select>
+                
+                <select onchange="window.location.href='/?category=' + this.value">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Task List -->
+            <ul class="task-list">
+                {% for task in tasks %}
+                    <li class="task-item" data-task-id="{{ task.id }}">
+                        <div class="task-content">
+                            <h3>{{ task.title }}</h3>
+                            <p>{{ task.description }}</p>
+                            <div class="task-meta">
+                                {% if task.category_name %}
+                                    <span class="category-tag">{{ task.category_name }}</span>
+                                {% endif %}
+                                {% if task.due_date %}
+                                    <span class="due-date">Due: {{ task.due_date }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="edit-btn" onclick="editTask({{ task.id }})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <form method="POST" action="{{ url_for('delete', task_id=task.id) }}" style="display:inline;">
+                                <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this task?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div id="addTaskModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddTaskModal()">&times;</span>
+            <h2><i class="fas fa-plus"></i> Add New Task</h2>
+            <form method="POST" action="/add">
+                <div class="task-input-group">
+                    <input type="text" name="title" placeholder="Task Title" required>
+                    <textarea name="description" placeholder="Task Description"></textarea>
+                    <select name="category_id">
+                        <option value="">Select Category</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="date-input">
+                        <label for="due_date">Due Date:</label>
+                        <input type="date" id="due_date" name="due_date">
+                    </div>
+                </div>
+                <button type="submit">Add Task</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2><i class="fas fa-edit"></i> Edit Task</h2>
+            <form id="editForm" method="POST">
+                <div class="task-input-group">
+                    <input type="text" name="title" placeholder="Task Title" required>
+                    <textarea name="description" placeholder="Task Description"></textarea>
+                    <select name="category_id">
+                        <option value="">Select Category</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="date-input">
+                        <label for="edit_due_date">Due Date:</label>
+                        <input type="date" id="edit_due_date" name="due_date">
+                    </div>
+                </div>
+                <button type="submit">Update Task</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Add Task Modal
+        function showAddTaskModal() {
+            document.getElementById('addTaskModal').style.display = "block";
+        }
+
+        function closeAddTaskModal() {
+            document.getElementById('addTaskModal').style.display = "none";
+        }
+
+        // Edit Task Modal
+        function editTask(taskId) {
+            const modal = document.getElementById('editModal');
+            const form = document.getElementById('editForm');
+            const taskItem = document.querySelector(`[data-task-id="${taskId}"]`);
+            
+            form.action = `/edit/${taskId}`;
+            form.querySelector('[name="title"]').value = taskItem.querySelector('h3').textContent;
+            form.querySelector('[name="description"]').value = taskItem.querySelector('p').textContent;
+            
+            modal.style.display = "block";
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = "none";
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
