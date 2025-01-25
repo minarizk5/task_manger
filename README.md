@@ -80,4 +80,4 @@ GitHub: minarizk5
 
 Happy task managing!
 
-This `README.md` provides a comprehensive overview of your project, including setup instructions, features, and how to contribute. Remember to adjust details like the license or contact information as needed for your project.
+
